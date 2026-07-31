@@ -12,7 +12,7 @@ After the live comparison populates raw model responses, re-export the packet, t
 Then run:
 
 ```bash
-uv run trust-gate gate --human-labels artifacts/human_labeling/completed_labels.csv
+uv run python -m src.cli gate --human-labels artifacts/human_labeling/completed_labels.csv
 ```
 
 The importer validates completeness, allowed outcomes, failure categories, duplicates, and packet identity before analysis.

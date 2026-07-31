@@ -53,6 +53,11 @@ def main() -> None:
         if not os.getenv("FIREWORKS_API_KEY"):
             raise SystemExit("FIREWORKS_API_KEY is required")
         config = yaml.safe_load((ROOT / "config/run.v1.yaml").read_text())
+        pricing_config = config["pricing_per_million_tokens"]
+        if pricing_config["input"] is None or pricing_config["output"] is None:
+            raise SystemExit(
+                "Set current input/output prices in config/run.v1.yaml before any live call"
+            )
         cap = float(config["hard_spend_cap_usd"])
         if args.limit > 5 and args.confirm_spend_cap != cap:
             raise SystemExit(
@@ -80,10 +85,14 @@ def main() -> None:
                 timeout_seconds=float(config["timeout_seconds"]),
                 base_backoff_seconds=float(config["base_backoff_seconds"]),
                 pricing=(
-                    float(config["pricing_per_million_tokens"]["input"]),
-                    float(config["pricing_per_million_tokens"]["output"]),
+                    float(pricing_config["input"]),
+                    float(pricing_config["output"]),
                 ),
                 hard_spend_cap_usd=cap,
             )
         )
         print(output)
+
+
+if __name__ == "__main__":
+    main()

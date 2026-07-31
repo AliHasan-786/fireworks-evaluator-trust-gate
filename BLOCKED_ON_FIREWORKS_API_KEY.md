@@ -5,7 +5,7 @@ No Fireworks credential is available, so no live model result, hosted evaluator,
 Exact next command after setting current model IDs and confirming pricing in `config/run.v1.yaml`:
 
 ```bash
-FIREWORKS_API_KEY=... uv run trust-gate run-model \
+FIREWORKS_API_KEY=... uv run python -m src.cli run-model \
   --model-id accounts/fireworks/models/... --limit 5
 ```
 

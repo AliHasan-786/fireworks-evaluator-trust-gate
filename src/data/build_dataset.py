@@ -64,7 +64,7 @@ AMBIGUOUS = [
     (
         "amb-007",
         "I do not recognize this.",
-        "The message omits whether the item is a card payment, cash withdrawal, debit, transfer, or cash withdrawal.",
+        "The message omits whether the item is a card payment, cash withdrawal, direct debit, or transfer.",
     ),
     (
         "amb-008",
@@ -104,7 +104,7 @@ AMBIGUOUS = [
     (
         "amb-015",
         "There is money missing.",
-        "No account event identifies a payment, cash withdrawal, transfer, fee, or cash withdrawal.",
+        "No account event identifies a payment, cash withdrawal, transfer, refund, or fee.",
     ),
     ("amb-016", "Can you change it?", "Neither the object nor desired change is stated."),
     (
@@ -120,7 +120,7 @@ AMBIGUOUS = [
     (
         "amb-019",
         "It says pending.",
-        "The pending operation could be a card payment, cash withdrawal, transfer, or cash withdrawal.",
+        "The pending operation could be a card payment, cash withdrawal, transfer, or top up.",
     ),
     (
         "amb-020",

@@ -2,7 +2,9 @@
 
 An evaluator can become the reward signal for reinforcement fine-tuning, so a customer needs evidence that it catches the failures humans care about before automating retraining or deployment. **Current recommendation: NO-DEPLOY / INSUFFICIENT_EVIDENCE until a 30-case blind human calibration meets the versioned agreement, failure-recall, and leniency guardrails.**
 
-Public site: pending verified deployment. See `BLOCKED_ON_PUBLIC_DEPLOYMENT.md` if the deployment attempt cannot authenticate.
+Public site: https://fireworks-evaluator-trust-gate.vercel.app
+
+Repository: https://github.com/AliHasan-786/fireworks-evaluator-trust-gate
 
 ## One-minute reviewer path
 
@@ -29,7 +31,7 @@ Requires Python 3.11+ and `uv`.
 
 ```bash
 uv sync --extra dev --extra eval-protocol
-uv run trust-gate build-dataset
+uv run python -m src.cli build-dataset
 uv run ruff check .
 uv run pytest
 ```
@@ -53,7 +55,7 @@ Do not run the full comparison until all five responses and the configured spend
 
 | Artifact | Status | Basis |
 |---|---|---|
-| Dataset | Verified | 120 rows; manifest SHA-256 `a6b9809e...20c15f0` |
+| Dataset | Verified | 120 rows; manifest SHA-256 `79586a20...06c25e` |
 | Offline tests | Verified | 22 passed |
 | Fast/strong comparison | Not run | `FIREWORKS_API_KEY` missing |
 | Human calibration | Not run | Model responses unavailable; packet cells say `PENDING_LIVE_RUN` |
