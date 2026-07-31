@@ -1,0 +1,15 @@
+version: "1.0"
+minimum_human_cases: 30
+minimum_human_failures: 5
+minimum_agreement: 0.85
+minimum_failure_recall: 0.90
+maximum_leniency_rate: 0.10
+bootstrap_confidence: 0.95
+bootstrap_iterations: 2000
+bootstrap_seed: 20260731
+rationale:
+  minimum_human_cases: "The packet is a pilot-sized calibration sample, not production proof. Fewer cases are insufficient."
+  minimum_human_failures: "Failure recall is unstable when the denominator contains fewer than five human failures."
+  minimum_agreement: "Allows limited rubric noise while requiring close alignment."
+  minimum_failure_recall: "Missing human-identified failures can feed bad reward into retraining, so recall is the strictest quality condition."
+  maximum_leniency_rate: "False passes are more dangerous than false fails in an automated retraining gate."

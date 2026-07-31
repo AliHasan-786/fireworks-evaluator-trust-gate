@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "source": {
+    "train": "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/train.csv",
+    "test": "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/test.csv",
+    "categories": "https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/categories.json"
+  },
+  "source_repository": "https://github.com/PolyAI-LDN/task-specific-datasets/tree/master/banking_data",
+  "license": "CC BY 4.0",
+  "selection": "Banking77 test split only; deterministic SHA-256 ordering seeded by dataset version; 20 original ambiguity cases.",
+  "counts": {
+    "banking77_standard": 80,
+    "banking77_difficult": 20,
+    "authored_ambiguous": 20
+  },
+  "source_hashes": {
+    "train": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b",
+    "test": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d",
+    "categories": "53261da888122daf2d120d925458631d9619e15d82e56052e7a42e535ce32b63"
+  },
+  "dataset_sha256": "a6b9809e50267222aaef859b11e67a7c0da99e56fec5a7b47f2efd80320c15f0",
+  "leakage_check": "All sourced messages compared case-insensitively against the upstream train split; no overlaps allowed."
+}

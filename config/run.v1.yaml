@@ -1,0 +1,11 @@
+version: "1.0"
+max_concurrency: 5
+max_attempts: 3
+timeout_seconds: 45
+base_backoff_seconds: 1
+max_output_tokens: 320
+hard_spend_cap_usd: 8.00
+pricing_per_million_tokens:
+  input: 0.90
+  output: 0.90
+note: "Pricing is configuration, not a claim about current Fireworks prices. Set it from the selected model's current pricing page before a live run."

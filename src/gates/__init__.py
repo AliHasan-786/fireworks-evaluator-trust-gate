@@ -1,0 +1,1 @@
+"""Trust-gate decisions."""

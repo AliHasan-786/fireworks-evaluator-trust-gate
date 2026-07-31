@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+artifacts/live/
+public_site/dist/
+node_modules/
+.vercel/
+.DS_Store
+.playwright-cli/
+output/

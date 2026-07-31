@@ -1,0 +1,2 @@
+eval-protocol==0.3.32
+pydantic>=2.10,<3
