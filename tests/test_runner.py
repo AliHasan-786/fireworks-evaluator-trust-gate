@@ -3,7 +3,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.inference.fireworks_runner import estimate_cost, load_completed, run_case, run_dataset
+from src.inference.fireworks_runner import (
+    estimate_cost,
+    load_completed,
+    load_recorded_spend,
+    run_case,
+    run_dataset,
+)
 from src.schemas import TokenUsage
 
 
@@ -53,6 +59,31 @@ async def test_retry_limit_and_success(answerable_case):
 
 
 @pytest.mark.asyncio
+async def test_invalid_response_retry_cost_is_not_lost(answerable_case):
+    calls = 0
+
+    async def request(_case):
+        nonlocal calls
+        calls += 1
+        return response("not-json" if calls == 1 else valid_content())
+
+    async def no_sleep(_seconds):
+        return None
+
+    record = await run_case(
+        answerable_case,
+        "model",
+        request,
+        max_attempts=2,
+        sleep=no_sleep,
+        pricing=(1_000, 1_000),
+    )
+    assert record.usage.prompt_tokens == 200
+    assert record.usage.completion_tokens == 40
+    assert record.estimated_cost_usd == 0.24
+
+
+@pytest.mark.asyncio
 async def test_errors_never_become_predictions(answerable_case):
     async def request(_case):
         raise RuntimeError("down")
@@ -82,3 +113,32 @@ async def test_resumability_skips_completed(tmp_path, answerable_case):
     await run_dataset([answerable_case], "model", path, request)
     assert calls == 1
     assert load_completed(path, "model") == {answerable_case.case_id}
+
+
+@pytest.mark.asyncio
+async def test_hard_cap_reserves_retry_inclusive_case_bound_and_survives_resume(
+    tmp_path, answerable_case
+):
+    calls = 0
+
+    async def request(_case):
+        nonlocal calls
+        calls += 1
+        return response(valid_content())
+
+    cases = [answerable_case.model_copy(update={"case_id": f"case-{index}"}) for index in range(3)]
+    path = tmp_path / "capped.jsonl"
+    kwargs = {
+        "max_concurrency": 3,
+        "pricing": (3_000, 5_000),
+        "hard_spend_cap_usd": 1.1,
+        "maximum_cost_per_case_usd": 0.5,
+    }
+    with pytest.raises(RuntimeError, match="prevents another request"):
+        await run_dataset(cases, "model", path, request, **kwargs)
+    assert calls == 2
+    assert load_recorded_spend(path, "model") == pytest.approx(0.8)
+
+    with pytest.raises(RuntimeError, match="prevents another request"):
+        await run_dataset(cases, "model", path, request, **kwargs)
+    assert calls == 2

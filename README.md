@@ -10,7 +10,7 @@ Repository: https://github.com/AliHasan-786/fireworks-evaluator-trust-gate
 
 1. Question: can this evaluator safely drive an automated loop?
 2. Decision: `INSUFFICIENT_EVIDENCE` because no human labels exist.
-3. Strongest verified evidence: a reproducible 120-case set, every Banking77 intent represented in the standard slice, zero test/train overlap, and 22 offline tests passing.
+3. Strongest verified evidence: a reproducible 120-case set, every Banking77 intent represented in the standard slice, zero test/train overlap, and 28 offline tests passing.
 4. Representative risk: “Why was I charged extra?” should trigger clarification because several routing intents remain plausible.
 5. Product implication: make human calibration and missed-failure direction a setup gate for automation.
 6. Limitations: no Fireworks key, live run, human study, or production distribution is claimed.
@@ -18,10 +18,10 @@ Repository: https://github.com/AliHasan-786/fireworks-evaluator-trust-gate
 ## What is built
 
 - Versioned 120-case JSONL: 80 broad Banking77 test examples, 20 answerable examples from confused intent pairs, and 20 original ambiguity cases.
-- A resilient Fireworks runner using the current documented Python client and JSON Schema output, with bounded concurrency, retry/backoff, timeout, resume, token, latency, raw-response, error, and configured-cost recording.
+- A resilient Fireworks runner using the current documented Python client and JSON Schema output, with bounded concurrency, retry/backoff, timeout, resume, cumulative attempt accounting, hard-cap admission control, token, latency, raw-response, error, and configured-cost recording.
 - Deterministic scoring for schema, confidence, clarification, and exact intent correctness.
 - A tightly scoped LLM judge for rationale quality that cannot override ground truth.
-- Blind CSV export/import, agreement and failure-recall analysis, directionality, confusion matrices, bootstrap intervals, and subgroup warnings.
+- Blind CSV export/import with source-evidence fingerprints, an end-to-end run-record join, agreement and failure-recall analysis, directionality, confusion matrices, bootstrap intervals, and subgroup warnings.
 - A versioned PASS / FAIL / INSUFFICIENT_EVIDENCE gate.
 - A self-contained Eval Protocol evaluator project and an offline-tested static review experience.
 
@@ -42,21 +42,42 @@ Validate the standalone Eval Protocol scorer without a model call:
 uv run pytest eval_protocol_evaluator/test_local_scorer.py
 ```
 
-Configure a live run using `.env.example`, current serverless model IDs, and current pricing copied into `config/run.v1.yaml`. Run five cases first:
+Configure a live run using `.env.example`, current serverless model IDs, current pricing, and a conservative retry-inclusive `maximum_cost_per_case_usd` copied into `config/run.v1.yaml`. The runner includes persisted spend when resuming and reserves the per-case bound before scheduling work under the USD 8 hard cap. Run five cases first:
 
 ```bash
-FIREWORKS_API_KEY=... FIREWORKS_MODEL_FAST=accounts/fireworks/models/... \
-  EP_MAX_DATASET_ROWS=5 uv run pytest -m live eval_protocol_evaluator/test_trust_evaluator.py
+FIREWORKS_API_KEY=... uv run python -m src.cli run-model \
+  --model-id accounts/fireworks/models/... --limit 5
 ```
 
-Do not run the full comparison until all five responses and the configured spend cap have been inspected.
+Do not continue until all five raw responses and recorded costs have been inspected. The confirmed full run resumes the same JSONL without repeating successful cases:
+
+```bash
+FIREWORKS_API_KEY=... uv run python -m src.cli run-model \
+  --model-id accounts/fireworks/models/... --limit 120 --confirm-spend-cap 8.00
+```
+
+The separately marked Eval Protocol live test remains available for a five-row framework smoke check via `EP_MAX_DATASET_ROWS=5 uv run pytest -m live eval_protocol_evaluator/test_trust_evaluator.py`.
+
+After a complete CLI run, generate a labelable packet from the exact saved responses. The gate recomputes automated outcomes from those same records and rejects missing, duplicate, incomplete, or modified evidence:
+
+```bash
+uv run python -m src.cli export-packet \
+  --model-id accounts/fireworks/models/... \
+  --run-records artifacts/live/MODEL_SLUG.jsonl \
+  --output artifacts/human_labeling/blind_packet.csv
+
+uv run python -m src.cli gate \
+  --human-labels artifacts/human_labeling/completed_labels.csv \
+  --run-records artifacts/live/MODEL_SLUG.jsonl \
+  --output output/evaluator_trust_gate.json
+```
 
 ## Evidence status
 
 | Artifact | Status | Basis |
 |---|---|---|
 | Dataset | Verified | 120 rows; manifest SHA-256 `79586a20...06c25e` |
-| Offline tests | Verified | 22 passed |
+| Offline tests | Verified | 28 passed |
 | Fast/strong comparison | Not run | `FIREWORKS_API_KEY` missing |
 | Human calibration | Not run | Model responses unavailable; packet cells say `PENDING_LIVE_RUN` |
 | Trust decision | `INSUFFICIENT_EVIDENCE` | Missing human-label file fails closed |

@@ -5,7 +5,8 @@ timeout_seconds: 45
 base_backoff_seconds: 1
 max_output_tokens: 320
 hard_spend_cap_usd: 8.00
+maximum_cost_per_case_usd: null
 pricing_per_million_tokens:
   input: null
   output: null
-note: "Pricing is configuration, not a claim about current Fireworks prices. Set it from the selected model's current pricing page before a live run."
+note: "Pricing is configuration, not a claim about current Fireworks prices. Set it from the selected model's current pricing page before a live run. Set maximum_cost_per_case_usd to a conservative upper bound for all attempts on one case; admission control uses it to keep scheduled work within the hard cap."
