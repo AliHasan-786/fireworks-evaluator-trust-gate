@@ -8,7 +8,7 @@
 
 The versioned set contains 120 cases: 80 stratified Banking77 test examples spanning all 77 intents, 20 answerable test examples selected reproducibly from commonly confused pairs, and 20 original under-specified messages whose ground truth is `needs_clarification=true`. All sourced messages were compared case-insensitively with the upstream train split; duplicates and overlaps are rejected.
 
-The blind packet contains all 20 ambiguity cases plus 10 reproducibly selected difficult cases. It exposes the input and raw model response while hiding expected intent, deterministic score, judge result, and any aggregate model score. A failed human label requires a failure category.
+The blind packet contains all 20 ambiguity cases plus 10 reproducibly selected difficult cases. It exposes the input and raw model response while hiding expected intent, deterministic score, judge result, and any aggregate model score. Each immutable evidence row is SHA-256 fingerprinted; the importer checks its model, case, order, input, response, and fingerprint against the saved run records. A failed human label requires a failure category. Automated outcomes are then recomputed from the same raw responses rather than accepted from the CSV.
 
 ## Automated evaluator versus human
 

@@ -45,9 +45,9 @@ class ModelPrediction(BaseModel):
 
 
 class TokenUsage(BaseModel):
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
+    prompt_tokens: int = Field(default=0, ge=0)
+    completion_tokens: int = Field(default=0, ge=0)
+    total_tokens: int = Field(default=0, ge=0)
 
 
 class RunRecord(BaseModel):
@@ -55,14 +55,20 @@ class RunRecord(BaseModel):
     model_id: str
     started_at: datetime
     completed_at: datetime
-    latency_ms: float
-    attempts: int
+    latency_ms: float = Field(ge=0)
+    attempts: int = Field(ge=1)
     usage: TokenUsage = Field(default_factory=TokenUsage)
-    estimated_cost_usd: float | None = None
+    estimated_cost_usd: float | None = Field(default=None, ge=0)
     raw_response: str | None = None
     parsed_response: ModelPrediction | None = None
     error_type: str | None = None
     error_message: str | None = None
+
+    @model_validator(mode="after")
+    def timestamps_are_ordered(self) -> RunRecord:
+        if self.completed_at < self.started_at:
+            raise ValueError("completed_at cannot precede started_at")
+        return self
 
 
 class DeterministicResult(BaseModel):
@@ -93,4 +99,6 @@ class HumanLabel(BaseModel):
     def failed_cases_need_category(self) -> HumanLabel:
         if self.human_outcome == "fail" and not self.failure_category:
             raise ValueError("failed cases require failure_category")
+        if self.human_outcome == "pass" and self.failure_category:
+            raise ValueError("passing cases cannot have failure_category")
         return self

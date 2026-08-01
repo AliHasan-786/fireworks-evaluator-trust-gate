@@ -35,6 +35,14 @@ def _usage(response: Any) -> TokenUsage:
     )
 
 
+def _add_usage(left: TokenUsage, right: TokenUsage) -> TokenUsage:
+    return TokenUsage(
+        prompt_tokens=left.prompt_tokens + right.prompt_tokens,
+        completion_tokens=left.completion_tokens + right.completion_tokens,
+        total_tokens=left.total_tokens + right.total_tokens,
+    )
+
+
 def create_fireworks_request(
     client: Any, model_id: str, case: EvaluationCase, max_tokens: int
 ) -> Awaitable[Any]:
@@ -68,13 +76,16 @@ async def run_case(
     started = datetime.now(UTC)
     start_clock = time.perf_counter()
     last_exc: Exception | None = None
+    last_raw: str | None = None
+    cumulative_usage = TokenUsage()
     for attempt in range(1, max_attempts + 1):
         try:
             response = await asyncio.wait_for(request(case), timeout=timeout_seconds)
+            cumulative_usage = _add_usage(cumulative_usage, _usage(response))
             raw = response.choices[0].message.content
+            last_raw = raw if isinstance(raw, str) else repr(raw)
             parsed = ModelPrediction.model_validate(json.loads(raw))
-            usage = _usage(response)
-            cost = estimate_cost(usage, *pricing) if pricing else None
+            cost = estimate_cost(cumulative_usage, *pricing) if pricing else None
             return RunRecord(
                 case_id=case.case_id,
                 model_id=model_id,
@@ -82,7 +93,7 @@ async def run_case(
                 completed_at=datetime.now(UTC),
                 latency_ms=(time.perf_counter() - start_clock) * 1000,
                 attempts=attempt,
-                usage=usage,
+                usage=cumulative_usage,
                 estimated_cost_usd=cost,
                 raw_response=raw,
                 parsed_response=parsed,
@@ -92,6 +103,10 @@ async def run_case(
             ConnectionError,
             OSError,
             RuntimeError,
+            AttributeError,
+            IndexError,
+            KeyError,
+            TypeError,
             json.JSONDecodeError,
             ValidationError,
         ) as exc:
@@ -108,6 +123,9 @@ async def run_case(
         completed_at=datetime.now(UTC),
         latency_ms=(time.perf_counter() - start_clock) * 1000,
         attempts=max_attempts,
+        usage=cumulative_usage,
+        estimated_cost_usd=estimate_cost(cumulative_usage, *pricing) if pricing else None,
+        raw_response=last_raw,
         error_type=type(last_exc).__name__,
         error_message=str(last_exc),
     )
@@ -125,6 +143,25 @@ def load_completed(path: Path, model_id: str) -> set[str]:
     return completed
 
 
+def load_recorded_spend(path: Path, model_id: str) -> float:
+    """Sum persisted attempt costs so a resumed run cannot reset its budget."""
+    if not path.exists():
+        return 0.0
+    spent = 0.0
+    for line_number, line in enumerate(path.read_text().splitlines(), 1):
+        if not line.strip():
+            continue
+        record = RunRecord.model_validate_json(line)
+        if record.model_id != model_id:
+            continue
+        if record.estimated_cost_usd is None:
+            raise ValueError(
+                f"line {line_number} has no estimated cost; cannot enforce a resumed hard cap"
+            )
+        spent += record.estimated_cost_usd
+    return spent
+
+
 async def run_dataset(
     cases: Iterable[EvaluationCase],
     model_id: str,
@@ -133,8 +170,17 @@ async def run_dataset(
     *,
     max_concurrency: int = 5,
     hard_spend_cap_usd: float | None = None,
+    maximum_cost_per_case_usd: float | None = None,
     **run_case_kwargs: Any,
 ) -> list[RunRecord]:
+    if hard_spend_cap_usd is not None and (
+        maximum_cost_per_case_usd is None or maximum_cost_per_case_usd <= 0
+    ):
+        raise ValueError(
+            "maximum_cost_per_case_usd must be a positive, operator-confirmed retry-inclusive bound when a hard cap is enabled"
+        )
+    if hard_spend_cap_usd is not None and run_case_kwargs.get("pricing") is None:
+        raise ValueError("pricing is required when a hard spend cap is enabled")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     completed = load_completed(output_path, model_id)
     semaphore = asyncio.Semaphore(max_concurrency)
@@ -145,17 +191,36 @@ async def run_dataset(
 
     pending = [case for case in cases if case.case_id not in completed]
     records: list[RunRecord] = []
-    spent = 0.0
-    for start in range(0, len(pending), max_concurrency):
-        batch = pending[start : start + max_concurrency]
+    spent = load_recorded_spend(output_path, model_id) if hard_spend_cap_usd is not None else 0.0
+    start = 0
+    while start < len(pending):
+        batch_size = min(max_concurrency, len(pending) - start)
+        if hard_spend_cap_usd is not None:
+            assert maximum_cost_per_case_usd is not None
+            remaining = hard_spend_cap_usd - spent
+            affordable = int((remaining + 1e-12) // maximum_cost_per_case_usd)
+            batch_size = min(batch_size, affordable)
+            if batch_size < 1:
+                raise RuntimeError(
+                    "hard spend cap prevents another request: "
+                    f"${spent:.6f} recorded, ${remaining:.6f} remaining, "
+                    f"${maximum_cost_per_case_usd:.6f} reserved per case"
+                )
+        batch = pending[start : start + batch_size]
         for future in asyncio.as_completed([bounded(case) for case in batch]):
             record = await future
             with output_path.open("a", encoding="utf-8") as handle:
                 handle.write(record.model_dump_json() + "\n")
             records.append(record)
             spent += record.estimated_cost_usd or 0.0
-        if hard_spend_cap_usd is not None and spent >= hard_spend_cap_usd:
-            raise RuntimeError(
-                f"hard spend cap reached after a bounded batch: ${spent:.6f} >= ${hard_spend_cap_usd:.2f}"
-            )
+            if (
+                maximum_cost_per_case_usd is not None
+                and record.estimated_cost_usd is not None
+                and record.estimated_cost_usd > maximum_cost_per_case_usd
+            ):
+                raise RuntimeError(
+                    "actual retry-inclusive case cost exceeded maximum_cost_per_case_usd; "
+                    "stop and correct the operator-provided bound"
+                )
+        start += batch_size
     return records

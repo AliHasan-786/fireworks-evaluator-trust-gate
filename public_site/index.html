@@ -50,7 +50,7 @@
       <div class="inventory">
         <article><p class="number">120</p><h3>Versioned cases</h3><p>80 broad Banking77 examples, 20 difficult answerable cases, and 20 authored ambiguity cases.</p><span class="verified">Verified offline</span></article>
         <article><p class="number">77</p><h3>Intent classes covered</h3><p>Every Banking77 intent appears in the standard slice; sourced examples come only from the upstream test split.</p><span class="verified">Verified offline</span></article>
-        <article><p class="number">22</p><h3>Offline tests passing</h3><p>Schema, scoring, ambiguity, retries, resume, cost, bootstrap, agreement, and every gate path.</p><span class="verified">Verified offline</span></article>
+        <article><p class="number">28</p><h3>Offline tests passing</h3><p>Schema, scoring, ambiguity, retry-complete cost caps, resume, provenance, bootstrap, agreement, and every gate path.</p><span class="verified">Verified offline</span></article>
         <article class="missing"><p class="number">0</p><h3>Human labels completed</h3><p>No calibration claim is available. This missing evidence is the decision, not a footnote.</p><span>Blocked</span></article>
       </div>
     </section>
@@ -87,7 +87,7 @@
       <ol class="method-steps">
         <li><span>01</span><div><h3>Ground truth first</h3><p>Exact intent and clarification behavior are checked deterministically. Parse and API errors fail visibly.</p></div></li>
         <li><span>02</span><div><h3>Judge only the irreducible</h3><p>An LLM judge assesses whether a rationale names the real ambiguity. It cannot override ground truth.</p></div></li>
-        <li><span>03</span><div><h3>Calibrate blind</h3><p>Humans review all ambiguity cases plus failure-prone answerable cases without evaluator or judge scores.</p></div></li>
+        <li><span>03</span><div><h3>Calibrate blind</h3><p>Humans review fingerprinted raw evidence for all ambiguity cases plus failure-prone answerable cases without evaluator or judge scores.</p></div></li>
         <li><span>04</span><div><h3>Gate on missed failures</h3><p>Agreement matters, but failure recall is first class because evaluator leniency can corrupt a reward loop.</p></div></li>
       </ol>
     </section>

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 from pathlib import Path
 
@@ -9,6 +10,7 @@ import yaml
 
 from src.data.build_dataset import write_dataset
 from src.gates.trust_gate import evaluate_gate, load_config
+from src.human_labeling.calibration import evaluate_completed_packet, packet_responses
 from src.human_labeling.export import export_packet
 from src.inference.fireworks_runner import create_fireworks_request, run_dataset
 from src.schemas import EvaluationCase
@@ -30,9 +32,15 @@ def main() -> None:
     subparsers.add_parser("build-dataset")
     packet = subparsers.add_parser("export-packet")
     packet.add_argument("--model-id", required=True)
+    packet.add_argument(
+        "--run-records",
+        help="JSONL from run-model; when omitted the packet is intentionally marked pending",
+    )
     packet.add_argument("--output", default="artifacts/human_labeling/blind_packet.csv")
     gate = subparsers.add_parser("gate")
     gate.add_argument("--human-labels", default="artifacts/human_labeling/completed_labels.csv")
+    gate.add_argument("--run-records", help="JSONL used to populate the completed blind packet")
+    gate.add_argument("--output", help="Optional path for the machine-readable gate report")
     run = subparsers.add_parser("run-model")
     run.add_argument("--model-id", required=True)
     run.add_argument("--limit", type=int, default=5)
@@ -43,12 +51,44 @@ def main() -> None:
         print(*write_dataset(ROOT), sep="\n")
     elif args.command == "export-packet":
         dataset = ROOT / "data/processed/v1.0.0/evaluation_set.jsonl"
-        export_packet(load_cases(dataset), args.model_id, ROOT / args.output)
+        cases = load_cases(dataset)
+        responses = (
+            packet_responses(cases, args.model_id, ROOT / args.run_records)
+            if args.run_records
+            else None
+        )
+        export_packet(cases, args.model_id, ROOT / args.output, responses)
         print(ROOT / args.output)
     elif args.command == "gate":
         config = load_config(ROOT / "config/trust_gate.v1.yaml")
-        decision = evaluate_gate(None, config, human_label_file=ROOT / args.human_labels)
-        print(decision.model_dump_json(indent=2))
+        human_label_file = ROOT / args.human_labels
+        if not human_label_file.exists() or not args.run_records:
+            decision = evaluate_gate(None, config, human_label_file=human_label_file)
+            if human_label_file.exists() and not args.run_records:
+                decision.reasons = [
+                    "Human labels exist but --run-records is required to recompute automated outcomes from source evidence."
+                ]
+            report = {"gate": decision.model_dump(), "analysis": None}
+        else:
+            cases = load_cases(ROOT / "data/processed/v1.0.0/evaluation_set.jsonl")
+            try:
+                decision, analysis = evaluate_completed_packet(
+                    cases,
+                    human_label_file,
+                    ROOT / args.run_records,
+                    config,
+                )
+            except ValueError as exc:
+                decision = evaluate_gate(None, config, human_label_file=human_label_file)
+                decision.reasons = [f"Evidence validation failed closed: {exc}"]
+                analysis = None
+            report = {"gate": decision.model_dump(), "analysis": analysis}
+        rendered = json.dumps(report, indent=2)
+        if args.output:
+            output = ROOT / args.output
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(rendered + "\n", encoding="utf-8")
+        print(rendered)
     elif args.command == "run-model":
         if not os.getenv("FIREWORKS_API_KEY"):
             raise SystemExit("FIREWORKS_API_KEY is required")
@@ -59,6 +99,11 @@ def main() -> None:
                 "Set current input/output prices in config/run.v1.yaml before any live call"
             )
         cap = float(config["hard_spend_cap_usd"])
+        maximum_cost_per_case = config.get("maximum_cost_per_case_usd")
+        if maximum_cost_per_case is None:
+            raise SystemExit(
+                "Set a conservative, retry-inclusive maximum_cost_per_case_usd in config/run.v1.yaml before any live call"
+            )
         if args.limit > 5 and args.confirm_spend_cap != cap:
             raise SystemExit(
                 f"Full runs require --confirm-spend-cap {cap:.2f} after inspecting a five-case smoke run"
@@ -89,6 +134,7 @@ def main() -> None:
                     float(pricing_config["output"]),
                 ),
                 hard_spend_cap_usd=cap,
+                maximum_cost_per_case_usd=float(maximum_cost_per_case),
             )
         )
         print(output)

@@ -10,6 +10,10 @@
 - [x] Generate sanitized demo artifacts, reports, PRD, readout, and recruiter-ready static site without inventing human or live Fireworks results.
 - [x] Run tests, lint, accessibility checks, secret scan, and desktop/mobile local QA.
 - [x] Deploy and verify publicly; capture live desktop and mobile screenshots.
+- [x] Connect saved run records to packet export and completed labels to the executable trust gate.
+- [x] Add exact packet-content and SHA-256 evidence validation so modified or stale review evidence fails closed.
+- [x] Add end-to-end calibration and provenance regression tests.
+- [x] Make live cost accounting retry-complete and enforce resume-aware hard-cap admission control.
 
 ## Acceptance boundary
 

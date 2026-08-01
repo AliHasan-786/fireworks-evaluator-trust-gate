@@ -21,7 +21,7 @@ Do not trigger retraining, promote a model, select the fast model as default, or
 ## Information needed next
 
 1. Valid `FIREWORKS_API_KEY` and current fast, strong, and judge model IDs.
-2. Confirmed per-token prices for those exact models and approval of the USD 8 hard cap.
+2. Confirmed per-token prices, a conservative retry-inclusive per-case cost bound for those exact models, and approval of the USD 8 hard cap.
 3. One primary domain reviewer and preferably a second reviewer for the 30-case blind packet.
 4. Customer-specific costs of false route, unnecessary clarification, and abstention.
 5. Production failure samples, data-residency constraints, and the rollback owner for any future automation.
