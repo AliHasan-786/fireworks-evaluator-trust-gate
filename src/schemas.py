@@ -6,6 +6,13 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 SourceType = Literal["banking77_standard", "banking77_difficult", "authored_ambiguous"]
+FailureCategory = Literal[
+    "wrong_intent",
+    "should_clarify",
+    "unnecessary_clarification",
+    "invalid_format",
+    "unsafe_rationale",
+]
 
 
 class EvaluationCase(BaseModel):
@@ -61,6 +68,7 @@ class RunRecord(BaseModel):
     estimated_cost_usd: float | None = Field(default=None, ge=0)
     raw_response: str | None = None
     parsed_response: ModelPrediction | None = None
+    finish_reason: str | None = None
     error_type: str | None = None
     error_message: str | None = None
 
@@ -92,7 +100,7 @@ class HumanLabel(BaseModel):
     model_id: str
     case_id: str
     human_outcome: Literal["pass", "fail"]
-    failure_category: str | None = None
+    failure_category: FailureCategory | None = None
     notes: str | None = None
 
     @model_validator(mode="after")

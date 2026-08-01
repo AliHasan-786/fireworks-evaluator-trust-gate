@@ -13,7 +13,17 @@ from pydantic import ValidationError
 
 from src.schemas import EvaluationCase, ModelPrediction, RunRecord, TokenUsage
 
-SYSTEM_PROMPT = """You route banking support messages. Choose exactly one Banking77 intent when the request is answerable. If multiple intents are plausible or key information is missing, set needs_clarification=true and predicted_intent=null. Return JSON matching the schema. Keep rationale under 80 words."""
+SYSTEM_PROMPT = """You route banking support messages. Choose exactly one allowed Banking77 intent when the request is answerable. If multiple intents are plausible or key information is missing, set needs_clarification=true and predicted_intent=null. Return JSON matching the schema. Keep rationale under 80 words."""
+
+
+class ResponseTruncatedError(RuntimeError):
+    """The service stopped at the output-token boundary before valid JSON completed."""
+
+
+def build_system_prompt(allowed_intents: Iterable[str] | None = None) -> str:
+    if not allowed_intents:
+        return SYSTEM_PROMPT
+    return SYSTEM_PROMPT + "\nAllowed intents: " + ", ".join(sorted(allowed_intents))
 
 
 def estimate_cost(usage: TokenUsage, input_per_million: float, output_per_million: float) -> float:
@@ -44,13 +54,18 @@ def _add_usage(left: TokenUsage, right: TokenUsage) -> TokenUsage:
 
 
 def create_fireworks_request(
-    client: Any, model_id: str, case: EvaluationCase, max_tokens: int
+    client: Any,
+    model_id: str,
+    case: EvaluationCase,
+    max_tokens: int,
+    allowed_intents: Iterable[str] | None = None,
+    reasoning_effort: str | None = None,
 ) -> Awaitable[Any]:
     schema = ModelPrediction.model_json_schema()
-    return client.chat.completions.acreate(
+    return client.chat.completions.create(
         model=model_id,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": build_system_prompt(allowed_intents)},
             {"role": "user", "content": case.user_message},
         ],
         response_format={
@@ -59,6 +74,7 @@ def create_fireworks_request(
         },
         temperature=0,
         max_tokens=max_tokens,
+        reasoning_effort=reasoning_effort,
     )
 
 
@@ -77,13 +93,20 @@ async def run_case(
     start_clock = time.perf_counter()
     last_exc: Exception | None = None
     last_raw: str | None = None
+    last_finish_reason: str | None = None
     cumulative_usage = TokenUsage()
     for attempt in range(1, max_attempts + 1):
         try:
             response = await asyncio.wait_for(request(case), timeout=timeout_seconds)
             cumulative_usage = _add_usage(cumulative_usage, _usage(response))
-            raw = response.choices[0].message.content
+            choice = response.choices[0]
+            last_finish_reason = getattr(choice, "finish_reason", None)
+            raw = choice.message.content
             last_raw = raw if isinstance(raw, str) else repr(raw)
+            if last_finish_reason == "length":
+                raise ResponseTruncatedError(
+                    "response reached max_output_tokens before completing structured JSON"
+                )
             parsed = ModelPrediction.model_validate(json.loads(raw))
             cost = estimate_cost(cumulative_usage, *pricing) if pricing else None
             return RunRecord(
@@ -97,6 +120,7 @@ async def run_case(
                 estimated_cost_usd=cost,
                 raw_response=raw,
                 parsed_response=parsed,
+                finish_reason=last_finish_reason,
             )
         except (
             TimeoutError,
@@ -126,6 +150,7 @@ async def run_case(
         usage=cumulative_usage,
         estimated_cost_usd=estimate_cost(cumulative_usage, *pricing) if pricing else None,
         raw_response=last_raw,
+        finish_reason=last_finish_reason,
         error_type=type(last_exc).__name__,
         error_message=str(last_exc),
     )

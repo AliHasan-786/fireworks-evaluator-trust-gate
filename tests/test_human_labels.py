@@ -35,6 +35,15 @@ def test_import_rejects_failure_category_on_pass(tmp_path):
         import_labels(path)
 
 
+def test_import_rejects_unknown_failure_category(tmp_path):
+    path = tmp_path / "labels.csv"
+    path.write_text(
+        "model_id,case_id,human_outcome,failure_category,notes\nm,c,fail,other,x\n"
+    )
+    with pytest.raises(ValueError, match="failure_category"):
+        import_labels(path)
+
+
 def _completed_evidence(tmp_path):
     cases = load_dataset()
     selected = select_blind_cases(cases)

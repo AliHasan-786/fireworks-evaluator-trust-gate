@@ -1,0 +1,20 @@
+[
+  {
+    "model_id": "accounts/fireworks/models/gpt-oss-20b",
+    "resolved_name": "accounts/fireworks/models/gpt-oss-20b",
+    "state": "READY",
+    "kind": "HF_BASE_MODEL",
+    "serverless_config": null,
+    "metadata_source": "https://fireworks.ai/models/fireworks/gpt-oss-20b",
+    "checked_at": "2026-08-01T21:16:44.748893+00:00"
+  },
+  {
+    "model_id": "accounts/fireworks/models/gpt-oss-120b",
+    "resolved_name": "accounts/fireworks/models/gpt-oss-120b",
+    "state": "READY",
+    "kind": "HF_BASE_MODEL",
+    "serverless_config": null,
+    "metadata_source": "https://fireworks.ai/models/fireworks/gpt-oss-120b",
+    "checked_at": "2026-08-01T21:17:47.142900+00:00"
+  }
+]

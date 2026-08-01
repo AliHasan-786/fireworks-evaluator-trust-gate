@@ -1,12 +1,28 @@
-version: "1.0"
+version: "1.1"
 max_concurrency: 5
 max_attempts: 3
 timeout_seconds: 45
 base_backoff_seconds: 1
-max_output_tokens: 320
-hard_spend_cap_usd: 8.00
-maximum_cost_per_case_usd: null
-pricing_per_million_tokens:
-  input: null
-  output: null
-note: "Pricing is configuration, not a claim about current Fireworks prices. Set it from the selected model's current pricing page before a live run. Set maximum_cost_per_case_usd to a conservative upper bound for all attempts on one case; admission control uses it to keep scheduled work within the hard cap."
+max_output_tokens: 4096
+reasoning_effort: low
+hard_spend_cap_usd: 6.00
+models:
+  fast:
+    model_id: accounts/fireworks/models/gpt-oss-20b
+    serverless: true
+    pricing_per_million_tokens:
+      input: 0.07
+      output: 0.30
+    maximum_cost_per_case_usd: 0.01
+    metadata_source: https://fireworks.ai/models/fireworks/gpt-oss-20b
+  strong:
+    model_id: accounts/fireworks/models/gpt-oss-120b
+    serverless: true
+    pricing_per_million_tokens:
+      input: 0.15
+      output: 0.60
+    maximum_cost_per_case_usd: 0.01
+    metadata_source: https://fireworks.ai/models/fireworks/gpt-oss-120b
+pricing_source: https://docs.fireworks.ai/serverless/pricing
+verified_at: "2026-08-01"
+note: "Official Standard serverless prices verified on 2026-08-01. maximum_cost_per_case_usd is a conservative retry-inclusive admission bound, not an expected charge. The comparison reserves half of the total cap for each model."

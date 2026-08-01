@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-01T21:24:02.814310+00:00",
+  "dataset_sha256": "79586a20c93622c69fd8e868427bf491ae2bb9b81a09803d94a8ed7c3a06c25e",
+  "config_version": "1.1",
+  "pricing": {
+    "verified_at": "2026-08-01",
+    "source": "https://docs.fireworks.ai/serverless/pricing",
+    "models": {
+      "fast": {
+        "input": 0.07,
+        "output": 0.3
+      },
+      "strong": {
+        "input": 0.15,
+        "output": 0.6
+      }
+    }
+  },
+  "coverage": {
+    "expected_cases": 120,
+    "fast": {
+      "events": 123,
+      "canonical_cases": 120,
+      "successful_cases": 120,
+      "recorded_spend_usd": 0.010938389999999997,
+      "record_file": "/Users/alihasan/Documents/Codex/codex-daily-jobs/projects/fireworks-evaluator-trust-gate/artifacts/live/gpt-oss-20b.jsonl"
+    },
+    "strong": {
+      "events": 120,
+      "canonical_cases": 120,
+      "successful_cases": 120,
+      "recorded_spend_usd": 0.020166149999999994,
+      "record_file": "/Users/alihasan/Documents/Codex/codex-daily-jobs/projects/fireworks-evaluator-trust-gate/artifacts/live/gpt-oss-120b.jsonl"
+    },
+    "total_recorded_spend_usd": 0.031104539999999993
+  },
+  "comparison": {
+    "models": {
+      "accounts/fireworks/models/gpt-oss-20b": {
+        "n": 120,
+        "intent_accuracy": 0.74,
+        "ambiguity_detection": 0.6,
+        "json_reliability": 1.0,
+        "api_or_parse_errors": 0,
+        "p50_latency_ms": 1698.8324999983888,
+        "p95_latency_ms": 5578.830202700192,
+        "estimated_cost_per_1000_cases_usd": 0.07530975
+      },
+      "accounts/fireworks/models/gpt-oss-120b": {
+        "n": 120,
+        "intent_accuracy": 0.79,
+        "ambiguity_detection": 0.55,
+        "json_reliability": 1.0,
+        "api_or_parse_errors": 0,
+        "p50_latency_ms": 1263.3899790016585,
+        "p95_latency_ms": 2980.6994666527307,
+        "estimated_cost_per_1000_cases_usd": 0.16805124999999996
+      }
+    },
+    "recommendation": "NO_DEPLOY: no model meets reliability and ambiguity guardrails.",
+    "decision_method": "Guardrails first, then latency for the default and quality for escalation; no weighted composite."
+  },
+  "examples": [
+    {
+      "case_id": "amb-001",
+      "source_type": "authored_ambiguous",
+      "user_message": "Why was I charged extra?",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"extra_charge_on_statement\",\n\"confidence\": 0.86,\n\"needs_clarification\": false,\n\"rationale\": \"The user asks why they were charged extra, which aligns with the 'extra_charge_on_statement' intent that covers unexpected additional fees on a statement.\"\n}",
+      "automated_evaluation": {
+        "passed": false,
+        "score": 0.0,
+        "schema_valid": true,
+        "intent_correct": null,
+        "clarification_correct": false,
+        "failure_reasons": [
+          "clarification_mismatch: expected needs_clarification=True, got False",
+          "ambiguous_case_forced_intent"
+        ]
+      },
+      "human_outcome": null
+    },
+    {
+      "case_id": "amb-014",
+      "source_type": "authored_ambiguous",
+      "user_message": "My card is not working.",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"card_not_working\",\n\"confidence\": 0.97,\n\"needs_clarification\": false,\n\"rationale\": \"The user explicitly states the card is not working, matching the 'card_not_working' intent.\"\n}",
+      "automated_evaluation": {
+        "passed": false,
+        "score": 0.0,
+        "schema_valid": true,
+        "intent_correct": null,
+        "clarification_correct": false,
+        "failure_reasons": [
+          "clarification_mismatch: expected needs_clarification=True, got False",
+          "ambiguous_case_forced_intent"
+        ]
+      },
+      "human_outcome": null
+    },
+    {
+      "case_id": "dif-003",
+      "source_type": "banking77_difficult",
+      "user_message": "Why was I charged a fee for withdrawing cash?",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"cash_withdrawal_charge\",\n\"confidence\": 0.99,\n\"needs_clarification\": false,\n\"rationale\": \"The user is asking about a fee applied to a cash withdrawal, which matches the cash_withdrawal_charge intent.\"\n}",
+      "automated_evaluation": {
+        "passed": true,
+        "score": 1.0,
+        "schema_valid": true,
+        "intent_correct": true,
+        "clarification_correct": true,
+        "failure_reasons": []
+      },
+      "human_outcome": null
+    }
+  ]
+}
