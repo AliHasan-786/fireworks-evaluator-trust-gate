@@ -11,6 +11,7 @@ from src.data.build_dataset import write_dataset
 from src.gates.trust_gate import evaluate_gate, load_config
 from src.human_labeling.calibration import evaluate_completed_packet, packet_responses
 from src.human_labeling.export import export_packet
+from src.human_labeling.review_app import render_review_app
 from src.inference.fireworks_runner import create_fireworks_request, run_dataset
 from src.inference.model_catalog import (
     ComparisonRunConfig,
@@ -91,6 +92,9 @@ def _add_parsers(subparsers: Any) -> None:
     comparison.add_argument("--phase", choices=["smoke", "full"], default="smoke")
     comparison.add_argument("--confirm-spend-cap", type=float)
     subparsers.add_parser("report-comparison")
+    review = subparsers.add_parser("build-review-app")
+    review.add_argument("--packet", default="artifacts/human_labeling/blind_packet.csv")
+    review.add_argument("--output", default="artifacts/human_labeling/reviewer_app.html")
 
 
 def _gate(args: Any) -> None:
@@ -256,6 +260,10 @@ def _run_comparison(args: Any) -> None:
             ROOT / "artifacts/human_labeling/blind_packet.csv",
             responses,
         )
+        render_review_app(
+            ROOT / "artifacts/human_labeling/blind_packet.csv",
+            ROOT / "artifacts/human_labeling/reviewer_app.html",
+        )
     print(json.dumps(artifact, indent=2))
 
 
@@ -285,6 +293,8 @@ def main() -> None:
     elif args.command == "report-comparison":
         _raw_config, config = load_run_config(ROOT / "config/run.v1.yaml")
         print(json.dumps(write_comparison(config), indent=2))
+    elif args.command == "build-review-app":
+        print(render_review_app(ROOT / args.packet, ROOT / args.output))
 
 
 if __name__ == "__main__":

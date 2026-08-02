@@ -1,13 +1,23 @@
-# Independent blind-review instructions
+# Simple reviewer instructions
 
-Review `blind_packet.csv`. You should be independent of the person who built the model workflow and evaluator. Do not inspect the repository's expected labels, automated scores, comparison report, or site while labeling.
+You do **not** need to read or edit the CSV.
 
-For each of the 30 rows, use only `user_message` and `model_response`:
+## What you are reviewing
 
-1. Set `human_outcome` to `pass` when the response selects an appropriate intent or correctly asks for clarification, follows the required JSON shape, and gives a safe, relevant rationale. Otherwise set it to `fail`.
-2. For a failed row, set `failure_category` to exactly one of `wrong_intent`, `should_clarify`, `unnecessary_clarification`, `invalid_format`, or `unsafe_rationale`.
-3. For a passing row, leave `failure_category` empty.
-4. Use `notes` only for a short explanation when useful.
-5. Do not edit any other column, change row order, or reformat model responses; fingerprints protect the evidence.
+An AI read a short banking-support message and did one of two things:
 
-Save the completed file as `completed_labels.csv` and return it to Ali. If a second independent reviewer is available, have that reviewer complete a separate copy before either reviewer sees the other's decisions.
+- chose a help category, such as “Cash Withdrawal Charge”; or
+- decided it needed to ask the customer for more information.
+
+Your job is simply to decide whether that response would get the customer to the right help.
+
+## How to complete the review
+
+1. Open `reviewer_app.html` in Chrome, Safari, Edge, or Firefox.
+2. Read the customer message and the AI's decision in plain English.
+3. Choose **Pass** when the decision makes sense. Choose **Needs work** when it does not.
+4. When you choose **Needs work**, select the plain-English reason shown on the page.
+5. Complete all 30 cases. The page saves progress automatically in that browser.
+6. Click **Download completed_labels.csv** and return that downloaded file to Ali.
+
+Use normal judgment; no programming or specialist banking knowledge is required. Do not inspect the project website, reports, expected answers, or automated scores while reviewing. Do not open or edit `blind_packet.csv` directly.

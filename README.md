@@ -10,7 +10,7 @@ Repository: https://github.com/AliHasan-786/fireworks-evaluator-trust-gate
 
 1. Question: can this evaluator safely drive an automated loop?
 2. Decision: `INSUFFICIENT_EVIDENCE` because no human labels exist.
-3. Strongest verified evidence: 240 complete Fireworks responses across GPT-OSS 20B and 120B, generated comparison metrics, a reproducible 120-case set, and 34 offline tests passing.
+3. Strongest verified evidence: 240 complete Fireworks responses across GPT-OSS 20B and 120B, generated comparison metrics, a reproducible 120-case set, and 35 offline tests passing.
 4. Representative risk: “Why was I charged extra?” should trigger clarification because several routing intents remain plausible.
 5. Product implication: make human calibration and missed-failure direction a setup gate for automation.
 6. Limitations: no human study, evaluator-human alignment, hosted Eval Protocol job, or production distribution is claimed.
@@ -69,6 +69,11 @@ uv run python -m src.cli export-packet \
   --run-records artifacts/live/MODEL_SLUG.jsonl \
   --output artifacts/human_labeling/blind_packet.csv
 
+uv run python -m src.cli build-review-app
+
+# The reviewer opens artifacts/human_labeling/reviewer_app.html,
+# completes 30 plain-language cards, and downloads completed_labels.csv.
+
 uv run python -m src.cli gate \
   --human-labels artifacts/human_labeling/completed_labels.csv \
   --run-records artifacts/live/MODEL_SLUG.jsonl \
@@ -80,10 +85,10 @@ uv run python -m src.cli gate \
 | Artifact | Status | Basis |
 |---|---|---|
 | Dataset | Verified | 120 rows; manifest SHA-256 `79586a20...06c25e` |
-| Offline tests | Verified | 34 passed; standalone scorer 2 passed; live test collects |
+| Offline tests | Verified | 35 passed; standalone scorer 2 passed; live test collects |
 | Fast/strong comparison | Verified | 120/120 valid records per model; generated memo; $0.031105 recorded runner spend |
 | Eval Protocol live smoke | Completed / threshold failed | Five real rollouts; deterministic aggregate 0.600 vs 0.850 threshold |
-| Human calibration | Awaiting independent reviewer | 30-case packet generated from exact 120B records |
+| Human calibration | Awaiting independent reviewer | Plain-language review app generated for 30 exact 120B records |
 | Trust decision | `INSUFFICIENT_EVIDENCE` | Missing human-label file fails closed |
 | Fireworks upload/job | Not attempted | No credentials; no URL fabricated |
 
