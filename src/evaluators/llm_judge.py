@@ -31,7 +31,7 @@ class FireworksJudgeClient:
         import asyncio
 
         response = await asyncio.wait_for(
-            self.client.chat.completions.acreate(
+            self.client.chat.completions.create(
                 model=self.model_id,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={

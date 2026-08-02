@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-eval-protocol = ["eval-protocol>=0.3.0"]
+eval-protocol = ["eval-protocol>=0.3.32,<0.4", "mcp>=1.28,<2"]
 dev = ["pytest>=8.3", "pytest-asyncio>=0.25", "ruff>=0.9"]
 
 [build-system]

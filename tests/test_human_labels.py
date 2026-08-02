@@ -1,4 +1,5 @@
 import csv
+import json
 from datetime import UTC, datetime
 
 import pytest
@@ -7,6 +8,7 @@ from conftest import load_dataset
 from src.human_labeling.calibration import evaluate_completed_packet, packet_responses
 from src.human_labeling.export import export_packet, select_blind_cases
 from src.human_labeling.import_labels import import_labels
+from src.human_labeling.review_app import render_review_app
 from src.schemas import ModelPrediction, RunRecord
 
 
@@ -17,6 +19,32 @@ def test_blind_packet_contains_no_scores_and_required_mix(tmp_path):
     assert len(rows) == 30
     assert "predicted_intent" not in rows[0] and "judge_score" not in rows[0]
     assert sum(row["case_id"].startswith("amb-") for row in rows) == 20
+
+
+def test_review_app_is_standalone_blind_and_contains_all_packet_rows(tmp_path):
+    cases = load_dataset()
+    packet = tmp_path / "packet.csv"
+    raw = json.dumps(
+        {
+            "predicted_intent": "cash_withdrawal_charge",
+            "confidence": 0.9,
+            "needs_clarification": False,
+            "rationale": "The message is about a cash withdrawal fee.",
+        }
+    )
+    responses = {case.case_id: raw for case in select_blind_cases(cases)}
+    export_packet(cases, "accounts/example/models/reviewer", packet, responses)
+    output = render_review_app(packet, tmp_path / "reviewer.html")
+    html = output.read_text()
+    prefix = '<script id="packet-data" type="application/json">'
+    payload = html.split(prefix, 1)[1].split("</script>", 1)[0]
+    embedded = json.loads(payload)
+
+    assert len(embedded) == 30
+    assert embedded[0]["model_response"] == raw
+    assert "expected_intent" not in html
+    assert "automated_evaluation" not in html
+    assert "Download completed_labels.csv" in html
 
 
 def test_import_requires_failure_category(tmp_path):
@@ -32,6 +60,15 @@ def test_import_rejects_failure_category_on_pass(tmp_path):
         "model_id,case_id,human_outcome,failure_category,notes\nm,c,pass,wrong_intent,x\n"
     )
     with pytest.raises(ValueError, match="passing cases cannot have failure_category"):
+        import_labels(path)
+
+
+def test_import_rejects_unknown_failure_category(tmp_path):
+    path = tmp_path / "labels.csv"
+    path.write_text(
+        "model_id,case_id,human_outcome,failure_category,notes\nm,c,fail,other,x\n"
+    )
+    with pytest.raises(ValueError, match="failure_category"):
         import_labels(path)
 
 

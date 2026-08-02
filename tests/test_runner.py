@@ -13,10 +13,15 @@ from src.inference.fireworks_runner import (
 from src.schemas import TokenUsage
 
 
-def response(content: str):
+def response(content: str | None, finish_reason: str = "stop"):
     usage = SimpleNamespace(prompt_tokens=100, completion_tokens=20, total_tokens=120)
     return SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=content))], usage=usage
+        choices=[
+            SimpleNamespace(
+                message=SimpleNamespace(content=content), finish_reason=finish_reason
+            )
+        ],
+        usage=usage,
     )
 
 
@@ -97,6 +102,28 @@ async def test_errors_never_become_predictions(answerable_case):
         and record.error_type == "RuntimeError"
         and record.attempts == 2
     )
+
+
+@pytest.mark.asyncio
+async def test_token_limit_is_recorded_as_truncation(answerable_case):
+    async def request(_case):
+        return response('{"predicted_intent":', finish_reason="length")
+
+    async def no_sleep(_seconds):
+        return None
+
+    record = await run_case(
+        answerable_case,
+        "model",
+        request,
+        max_attempts=1,
+        sleep=no_sleep,
+        pricing=(0.1, 0.2),
+    )
+    assert record.parsed_response is None
+    assert record.finish_reason == "length"
+    assert record.error_type == "ResponseTruncatedError"
+    assert record.estimated_cost_usd is not None
 
 
 @pytest.mark.asyncio

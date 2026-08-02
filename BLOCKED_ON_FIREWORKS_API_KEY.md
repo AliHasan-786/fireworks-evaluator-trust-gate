@@ -1,12 +1,12 @@
-# Blocked on Fireworks API key
+# Fireworks API key boundary resolved
 
-No Fireworks credential is available, so no live model result, hosted evaluator, evaluation job, latency, cost, or model comparison is claimed.
+The credential boundary was resolved on 2026-08-01 without writing the key to repository files or logs. Authenticated metadata checks returned both configured models in `READY` state. The capped workflow saved 120 canonical responses per model and recorded $0.031105 of runner spend.
 
-Exact next command after setting current model IDs, confirming pricing, and setting a conservative retry-inclusive `maximum_cost_per_case_usd` in `config/run.v1.yaml`:
+The exact completed operator path was:
 
 ```bash
-FIREWORKS_API_KEY=... uv run python -m src.cli run-model \
-  --model-id accounts/fireworks/models/... --limit 5
+uv run python -m src.cli run-comparison --phase smoke
+uv run python -m src.cli run-comparison --phase full --confirm-spend-cap 6.00
 ```
 
-Inspect all five raw results and costs before any full comparison. The runner includes invalid-response retry usage and prior persisted spend, and it reserves the configured maximum per-case cost before scheduling calls under the USD 8 hard cap.
+The first smoke exposed output-limit truncation on GPT-OSS 20B. The repair records `finish_reason`, classifies truncation explicitly, uses the documented low reasoning effort with a 4,096-token ceiling, and has regression coverage. No credential value is stored in Git.

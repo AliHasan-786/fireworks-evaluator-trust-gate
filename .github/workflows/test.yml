@@ -10,6 +10,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.11"
-      - run: uv sync --extra dev
+      - run: uv sync --extra dev --extra eval-protocol
       - run: uv run ruff check .
       - run: uv run pytest
+      - run: uv run pytest eval_protocol_evaluator/test_local_scorer.py
+      - run: uv run pytest --collect-only -q -m live eval_protocol_evaluator/test_trust_evaluator.py

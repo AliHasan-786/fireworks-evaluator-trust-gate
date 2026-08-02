@@ -75,6 +75,7 @@ def compare_models(records: list[RunRecord], cases: dict[str, EvaluationCase]) -
             model
             for model in complete
             if summaries[model]["json_reliability"] >= 0.99
+            and summaries[model]["ambiguity_detection"] is not None
             and summaries[model]["ambiguity_detection"] >= 0.90
         ]
         if not eligible:

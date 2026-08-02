@@ -4,10 +4,14 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.pyc
-artifacts/live/
+artifacts/live/*
+!artifacts/live/gpt-oss-20b.jsonl
+!artifacts/live/gpt-oss-120b.jsonl
+!artifacts/live/model_metadata.json
 public_site/dist/
 node_modules/
 .vercel/
 .DS_Store
 .playwright-cli/
-output/
+output/*
+!output/model_comparison.json
