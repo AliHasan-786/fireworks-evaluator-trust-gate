@@ -1,35 +1,113 @@
 # Evaluator trust report
 
-## Decision
+**Decision: FAIL**
 
-**INSUFFICIENT_EVIDENCE.** No completed human-label file exists. Under thresholds v1.0, missing labels cannot pass regardless of automated scores.
+The evidence is sufficient to make a gate decision, but the evaluator does not pass. It caught every human-identified failure in this pilot and never passed a response the reviewer failed; however, it rejected seven responses the reviewer accepted, reducing agreement below the versioned threshold.
 
-## Dataset and human method
+## Gate result
 
-The versioned set contains 120 cases: 80 stratified Banking77 test examples spanning all 77 intents, 20 answerable test examples selected reproducibly from commonly confused pairs, and 20 original under-specified messages whose ground truth is `needs_clarification=true`. All sourced messages were compared case-insensitively with the upstream train split; duplicates and overlaps are rejected.
+| Criterion | Observed | Required | Result |
+|---|---:|---:|---|
+| Validated human labels | 30 | >= 30 | PASS |
+| Human-identified failures | 5 | >= 5 | PASS |
+| Agreement | 76.7% | >= 85.0% | FAIL |
+| Failure recall | 100.0% | >= 90.0% | PASS |
+| Leniency rate | 0.0% | <= 10.0% | PASS |
 
-The blind packet contains all 20 ambiguity cases plus 10 reproducibly selected difficult cases. It exposes the input and raw model response while hiding expected intent, deterministic score, judge result, and any aggregate model score. Each immutable evidence row is SHA-256 fingerprinted; the importer checks its model, case, order, input, response, and fingerprint against the saved run records. A failed human label requires a failure category. Automated outcomes are then recomputed from the same raw responses rather than accepted from the CSV.
+Gate reason: agreement 0.767 does not meet >= 0.850
 
-## Automated evaluator versus human
+## Confusion matrix
 
-| Measure | Result | Acceptance criterion |
+| Human / automated | Automated pass | Automated fail |
 |---|---:|---:|
-| Human cases | 0 | >= 30 |
-| Human failures | 0 | >= 5 |
-| Agreement | Undefined | >= 85% |
-| Failure recall | Undefined | >= 90% |
-| Leniency | Undefined | <= 10% |
+| Human pass | 18 | 7 |
+| Human fail | 0 | 5 |
 
-No comparison is computed from missing data. The evaluator has not “performed well”; it has not been calibrated.
+Agreement bootstrap interval: 60.0% to 90.0%. Failure-recall interval: 100.0% to 100.0%.
 
-## Disagreement taxonomy
+## Traceable disagreements
 
-The implemented taxonomy separates evaluator-too-lenient (human fail, evaluator pass), evaluator-too-strict (human pass, evaluator fail), agreements, and human failure categories. There are no observed counts yet. Infrastructure and judge failures are tracked outside this taxonomy so they cannot be mistaken for model quality.
+All observed disagreements point in the same direction: the automated evaluator was stricter than the reviewer.
 
-## Rationale
+### `amb-008` — Authored ambiguous
 
-Failure recall is first class because an evaluator that misses human-identified failures can feed an incorrect positive reward into RFT. Agreement alone can look acceptable on a pass-heavy sample while hiding that risk. The gate also requires at least five human failures because a 90% recall estimate is not meaningful with a tiny denominator.
+> Can I use it abroad?
 
-## Uncertainty
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=True, got False; ambiguous_case_forced_intent
 
-The analysis returns fixed-seed bootstrap intervals overall and by source type. Subgroups below 30 cases and failure denominators below five receive explicit warnings. Even a future PASS on this packet would support only a pilot decision, not production-wide trust.
+### `amb-001` — Authored ambiguous
+
+> Why was I charged extra?
+
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=True, got False; ambiguous_case_forced_intent
+
+### `amb-006` — Authored ambiguous
+
+> It still has not arrived.
+
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=True, got False; ambiguous_case_forced_intent
+
+### `dif-008` — Banking77 difficult
+
+> Why am I being charged more ?
+
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=False, got True; intent_mismatch: expected card_payment_wrong_exchange_rate, got None
+
+### `amb-018` — Authored ambiguous
+
+> I was charged after trying to get money.
+
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=True, got False; ambiguous_case_forced_intent
+
+### `amb-020` — Authored ambiguous
+
+> Someone used my account.
+
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=True, got False; ambiguous_case_forced_intent
+
+### `amb-014` — Authored ambiguous
+
+> My card is not working.
+
+- Human outcome: **PASS**
+- Automated outcome: **FAIL**
+- Direction: `evaluator_too_strict`
+- Automated reason: clarification_mismatch: expected needs_clarification=True, got False; ambiguous_case_forced_intent
+
+## Subgroups
+
+| Source | n | Human failures | Agreement | Failure recall | Leniency | Strictness |
+|---|---:|---:|---:|---:|---:|---:|
+| Authored ambiguous | 20 | 3 | 70.0% | 100.0% | 0.0% | 35.3% |
+| Banking77 difficult | 10 | 2 | 90.0% | 100.0% | 0.0% | 12.5% |
+
+## Interpretation and next action
+
+The failure mode is over-rejection, not missed reviewer failures. Before automation, revise the deterministic rubric so plausible intent choices on under-specified messages are not automatically treated as failures, then run a new blinded packet. Preserve the current thresholds; changing them after seeing the result would invalidate the gate.
+
+## Limitations
+
+- This is one non-expert family reviewer who completed a quick informal blind pass; it is not a domain-expert study and does not measure inter-rater reliability.
+- Failure recall is based on five human failures, the minimum allowed denominator. The apparent 100% recall is encouraging but imprecise.
+- Banking77 and authored ambiguity cases are proxies, not Fireworks customer production traffic.
+- The result validates this evaluator/model/dataset snapshot only; it is not general certification.
+- Label evidence SHA-256: `6ca3631c72b18221bcb06d86fcceca567a5f45f5498ef6cb2a369a57eed71080`.
+- Generated at `2026-08-03T16:35:00.650535+00:00` from saved run records; no live call is needed to reproduce it.

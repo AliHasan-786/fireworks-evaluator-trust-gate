@@ -15,3 +15,4 @@ node_modules/
 .playwright-cli/
 output/*
 !output/model_comparison.json
+!output/evaluator_trust_gate.json

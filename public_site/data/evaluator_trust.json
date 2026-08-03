@@ -1,0 +1,223 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-03T16:35:00.650535+00:00",
+  "gate": {
+    "decision": "FAIL",
+    "reasons": [
+      "agreement 0.767 does not meet >= 0.850"
+    ],
+    "thresholds_version": "1.0"
+  },
+  "thresholds": {
+    "minimum_human_cases": 30,
+    "minimum_human_failures": 5,
+    "minimum_agreement": 0.85,
+    "minimum_failure_recall": 0.9,
+    "maximum_leniency_rate": 0.1
+  },
+  "evidence": {
+    "reviewer_profile": "one non-expert family reviewer; quick informal blind pass",
+    "human_labels_file": "artifacts/human_labeling/completed_labels.csv",
+    "human_labels_sha256": "6ca3631c72b18221bcb06d86fcceca567a5f45f5498ef6cb2a369a57eed71080",
+    "run_records_file": "artifacts/live/gpt-oss-120b.jsonl",
+    "model_id": "accounts/fireworks/models/gpt-oss-120b"
+  },
+  "analysis": {
+    "overall": {
+      "n": 30,
+      "human_failures": 5,
+      "agreement": 0.7666666666666667,
+      "failure_recall": 1.0,
+      "leniency_rate": 0.0,
+      "strictness_rate": 0.28,
+      "confusion_matrix": {
+        "human_pass_auto_pass": 18,
+        "human_pass_auto_fail": 7,
+        "human_fail_auto_pass": 0,
+        "human_fail_auto_fail": 5
+      },
+      "agreement_ci": [
+        0.6,
+        0.9
+      ],
+      "failure_recall_ci": [
+        1.0,
+        1.0
+      ],
+      "uncertainty": []
+    },
+    "by_source_type": {
+      "authored_ambiguous": {
+        "n": 20,
+        "human_failures": 3,
+        "agreement": 0.7,
+        "failure_recall": 1.0,
+        "leniency_rate": 0.0,
+        "strictness_rate": 0.35294117647058826,
+        "confusion_matrix": {
+          "human_pass_auto_pass": 11,
+          "human_pass_auto_fail": 6,
+          "human_fail_auto_pass": 0,
+          "human_fail_auto_fail": 3
+        },
+        "agreement_ci": [
+          0.5,
+          0.9
+        ],
+        "failure_recall_ci": [
+          1.0,
+          1.0
+        ],
+        "uncertainty": [
+          "small subgroup: estimates are directional, not production-grade",
+          "failure-recall denominator below five"
+        ]
+      },
+      "banking77_difficult": {
+        "n": 10,
+        "human_failures": 2,
+        "agreement": 0.9,
+        "failure_recall": 1.0,
+        "leniency_rate": 0.0,
+        "strictness_rate": 0.125,
+        "confusion_matrix": {
+          "human_pass_auto_pass": 7,
+          "human_pass_auto_fail": 1,
+          "human_fail_auto_pass": 0,
+          "human_fail_auto_fail": 2
+        },
+        "agreement_ci": [
+          0.7,
+          1.0
+        ],
+        "failure_recall_ci": [
+          1.0,
+          1.0
+        ],
+        "uncertainty": [
+          "small subgroup: estimates are directional, not production-grade",
+          "failure-recall denominator below five"
+        ]
+      }
+    },
+    "disagreement_taxonomy": {
+      "agreement": 23,
+      "evaluator_too_strict": 7,
+      "human_failure:should_clarify": 4,
+      "human_failure:unnecessary_clarification": 1
+    }
+  },
+  "disagreements": [
+    {
+      "case_id": "amb-008",
+      "source_type": "authored_ambiguous",
+      "user_message": "Can I use it abroad?",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"country_support\",\n\"confidence\": 0.93,\n\"needs_clarification\": false,\n\"rationale\": \"User asks if they can use it abroad, which maps to the country_support intent about using the card in other countries.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=True, got False",
+        "ambiguous_case_forced_intent"
+      ],
+      "direction": "evaluator_too_strict"
+    },
+    {
+      "case_id": "amb-001",
+      "source_type": "authored_ambiguous",
+      "user_message": "Why was I charged extra?",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"extra_charge_on_statement\",\n\"confidence\": 0.86,\n\"needs_clarification\": false,\n\"rationale\": \"The user asks why they were charged extra, which aligns with the 'extra_charge_on_statement' intent that covers unexpected additional fees on a statement.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=True, got False",
+        "ambiguous_case_forced_intent"
+      ],
+      "direction": "evaluator_too_strict"
+    },
+    {
+      "case_id": "amb-006",
+      "source_type": "authored_ambiguous",
+      "user_message": "It still has not arrived.",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"card_arrival\",\n\"confidence\": 0.92,\n\"needs_clarification\": false,\n\"rationale\": \"User reports that something has not arrived, which matches the card_arrival intent for undelivered cards.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=True, got False",
+        "ambiguous_case_forced_intent"
+      ],
+      "direction": "evaluator_too_strict"
+    },
+    {
+      "case_id": "dif-008",
+      "source_type": "banking77_difficult",
+      "user_message": "Why am I being charged more ?",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": null,\n\"confidence\": 0.0,\n\"needs_clarification\": true,\n\"rationale\": \"The query is vague about what type of charge is being referred to (e.g., card fee, exchange charge, extra statement charge). More specific information is needed to map to a single intent.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=False, got True",
+        "intent_mismatch: expected card_payment_wrong_exchange_rate, got None"
+      ],
+      "direction": "evaluator_too_strict"
+    },
+    {
+      "case_id": "amb-018",
+      "source_type": "authored_ambiguous",
+      "user_message": "I was charged after trying to get money.",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"cash_withdrawal_charge\",\n\"confidence\": 0.93,\n\"needs_clarification\": false,\n\"rationale\": \"User reports being charged after attempting to get money, which matches the cash withdrawal charge intent.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=True, got False",
+        "ambiguous_case_forced_intent"
+      ],
+      "direction": "evaluator_too_strict"
+    },
+    {
+      "case_id": "amb-020",
+      "source_type": "authored_ambiguous",
+      "user_message": "Someone used my account.",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"compromised_card\",\n\"confidence\": 0.92,\n\"needs_clarification\": false,\n\"rationale\": \"User reports unauthorized use of their account, indicating a possible compromised card situation.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=True, got False",
+        "ambiguous_case_forced_intent"
+      ],
+      "direction": "evaluator_too_strict"
+    },
+    {
+      "case_id": "amb-014",
+      "source_type": "authored_ambiguous",
+      "user_message": "My card is not working.",
+      "model_id": "accounts/fireworks/models/gpt-oss-120b",
+      "model_response": "{\n\"predicted_intent\": \"card_not_working\",\n\"confidence\": 0.97,\n\"needs_clarification\": false,\n\"rationale\": \"The user explicitly states the card is not working, matching the 'card_not_working' intent.\"\n}",
+      "human_outcome": "pass",
+      "human_failure_category": null,
+      "automated_pass": false,
+      "automated_failure_reasons": [
+        "clarification_mismatch: expected needs_clarification=True, got False",
+        "ambiguous_case_forced_intent"
+      ],
+      "direction": "evaluator_too_strict"
+    }
+  ],
+  "limitations": [
+    "one non-expert family reviewer; quick informal pass; no inter-rater reliability",
+    "30-case pilot sample",
+    "failure recall has a denominator of five",
+    "public proxy distribution, not production traffic"
+  ]
+}

@@ -44,7 +44,15 @@ def test_review_app_is_standalone_blind_and_contains_all_packet_rows(tmp_path):
     assert embedded[0]["model_response"] == raw
     assert "expected_intent" not in html
     assert "automated_evaluation" not in html
-    assert "Download completed_labels.csv" in html
+    assert "Download completed labels" in html
+    assert 'const reviewerId = "reviewer-1"' in html
+    assert 'completed_labels_reviewer-1.csv' in html
+
+    second = render_review_app(
+        packet, tmp_path / "reviewer-2.html", reviewer_id="reviewer-2"
+    ).read_text()
+    assert 'const reviewerId = "reviewer-2"' in second
+    assert 'completed_labels_reviewer-2.csv' in second
 
 
 def test_import_requires_failure_category(tmp_path):

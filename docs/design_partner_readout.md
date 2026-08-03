@@ -1,25 +1,24 @@
-# Design-partner readout - one-week foundation pilot
+# Design-partner readout
+
+## Executive decision
+
+The v1 evaluator trust gate is **FAIL**. One non-expert family reviewer completed a quick informal 30-case blind pass that produced 76.7% agreement against an 85.0% requirement. It recalled 5 of 5 human failures and produced zero false passes, but it false-failed seven reviewer-accepted responses.
 
 ## What we learned
 
-The highest-risk evaluator error is not a slightly lower average score; it is a false pass on behavior a human rejects. Ambiguous support requests make that concrete: forcing a plausible intent can look operationally convenient while routing the customer incorrectly. Deterministic checks cover ground-truth behavior cheaply; an LLM judge is only justified for whether the explanation names the real ambiguity.
+The evaluator's dominant risk is strictness. For an automated training loop this is safer than leniency, but it is still not trustworthy: rejecting reasonable outputs can teach a model to over-clarify and can distort product metrics.
 
-This week verified the evaluation set, real async SDK path, scorer contracts, error separation, analysis math, and fail-closed gate. The capped comparison produced 120 valid canonical records per model. GPT-OSS 20B reached 74% intent accuracy and 60% ambiguity detection; GPT-OSS 120B reached 79% and 55%. Both had 100% canonical JSON reliability, but neither met the 90% ambiguity guardrail. Evaluator-human alignment remains unverified because the blind packet has not been independently labeled.
+## Product recommendation
 
-## What should ship now
+Expose calibration as a first-class setup state with a confusion matrix and disagreement direction. The UI should distinguish `evaluator_too_strict` from `evaluator_too_lenient`, show the versioned threshold, and block automation on either insufficient evidence or a failed gate.
 
-- The versioned dataset and manifest.
-- Deterministic scorer and Eval Protocol package.
-- Resilient, resumable runner and capped smoke-first workflow.
-- Exact-record 30-case blind review packet and explicit leniency/failure-recall report.
-- `INSUFFICIENT_EVIDENCE` as the current gate state.
+## Proposed next design-partner cycle
 
-## What should not be automated yet
+1. Adjudicate the seven strictness disagreements with a domain owner and revise the pass rubric without changing thresholds.
+2. Add customer-specific failure examples and loss weights.
+3. Run at least two independent reviewers, measure inter-rater agreement, and adjudicate conflicts blind to evaluator output.
+4. Repeat on a held-out packet before enabling retraining or deployment actions.
 
-Do not trigger retraining, promote either model, or claim evaluator trust. The empirical model comparison fails its ambiguity guardrail and there is no human calibration denominator.
+## Boundary
 
-## Information needed next
-
-1. One primary domain reviewer who did not build the evaluator, and preferably a second reviewer, for the 30-case blind packet.
-2. Customer-specific costs of false route, unnecessary clarification, and abstention.
-3. Production failure samples, data-residency constraints, and the rollback owner for any future automation.
+This is a public-data candidate proposal, not a claim about Fireworks' internal product roadmap or customer results.
