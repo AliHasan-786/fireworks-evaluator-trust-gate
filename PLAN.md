@@ -21,7 +21,7 @@
 - [x] Generate the machine-readable comparison, decision memo, sanitized site data, and exact-record blind packet.
 - [x] Receive a completed 30-case packet from a blind reviewer who did not build the evaluator.
 - [x] Validate the returned evidence, run the trust gate, and generate the final evaluator-human report.
-- [ ] Redeploy and verify the site, then finalize only resume claims traceable to merged public evidence.
+- [x] Redeploy the merged site to production, confirm the Vercel deployment is ready, and finalize only resume claims traceable to merged public evidence.
 
 ## Acceptance boundary
 
