@@ -129,7 +129,7 @@
 
     <section class="finish">
       <div><h2 id="finish-title">0 of 30 reviewed</h2><p>Your progress stays in this browser. Finish every case to create the file for Ali.</p></div>
-      <button id="download" type="button" disabled>Download completed_labels.csv</button>
+      <button id="download" type="button" disabled>Download completed labels</button>
     </section>
     <footer>This page contains only the customer message and saved AI response. It does not contain expected answers or automated scores.</footer>
   </main>
@@ -137,7 +137,9 @@
   <script id="packet-data" type="application/json">__PACKET_JSON__</script>
   <script>
     const rows = JSON.parse(document.querySelector("#packet-data").textContent);
-    const storageKey = `fireworks-blind-review:${rows.map(row => row.evidence_sha256).join(":")}`;
+    const reviewerId = __REVIEWER_ID_JSON__;
+    const outputFilename = __DOWNLOAD_FILENAME_JSON__;
+    const storageKey = `fireworks-blind-review:${reviewerId}:${rows.map(row => row.evidence_sha256).join(":")}`;
     function loadSaved() {
       try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); }
       catch { return {}; }
@@ -238,7 +240,7 @@
       const blob = new Blob([lines.join("\n") + "\n"],{type:"text/csv;charset=utf-8"});
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "completed_labels.csv";
+      link.download = outputFilename;
       link.click();
       URL.revokeObjectURL(link.href);
     }

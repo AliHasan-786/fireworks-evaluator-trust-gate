@@ -37,7 +37,9 @@ def _number(value: float | None, decimals: int = 1) -> str:
     return "Undefined" if value is None else f"{value:.{decimals}f}"
 
 
-def _memo(artifact: dict[str, Any], aliases: dict[str, str]) -> str:
+def _memo(
+    artifact: dict[str, Any], aliases: dict[str, str], trust_artifact: dict[str, Any] | None
+) -> str:
     comparison = artifact["comparison"]
     rows = []
     for metric, label, formatter in (
@@ -56,8 +58,7 @@ def _memo(artifact: dict[str, Any], aliases: dict[str, str]) -> str:
         values = [formatter(comparison["models"].get(aliases[alias], {}).get(metric)) for alias in ("fast", "strong")]
         rows.append(f"| {label} | {values[0]} | {values[1]} |")
     coverage = artifact["coverage"]
-    return "\n".join(
-        [
+    lines = [
             "# Model decision memo",
             "",
             f"Generated from saved run records at `{artifact['generated_at']}`.",
@@ -81,12 +82,32 @@ def _memo(artifact: dict[str, Any], aliases: dict[str, str]) -> str:
             "",
             comparison["decision_method"],
             "",
-            "## Human-evidence boundary",
-            "",
-            "This comparison measures model behavior against versioned ground truth. It does not establish evaluator-human alignment. The trust gate remains `INSUFFICIENT_EVIDENCE` until a completed, fingerprint-validated blind packet is returned by an independent reviewer.",
-            "",
         ]
-    )
+    if trust_artifact is None:
+        lines.extend(
+            [
+                "## Human-evidence boundary",
+                "",
+                "This comparison measures model behavior against versioned ground truth. It does not establish evaluator-human alignment. The trust gate remains `INSUFFICIENT_EVIDENCE` until a completed, fingerprint-validated blind packet is returned by an independent reviewer.",
+                "",
+            ]
+        )
+    else:
+        trust = trust_artifact["analysis"]["overall"]
+        lines.extend(
+            [
+                "## Human calibration",
+                "",
+                f"**Trust gate: {trust_artifact['gate']['decision']}**",
+                "",
+                f"A fingerprint-validated 30-case blind review produced {trust['agreement']:.1%} agreement, "
+                f"{trust['failure_recall']:.1%} failure recall across {trust['human_failures']} human failures, "
+                f"{trust['leniency_rate']:.1%} leniency, and {trust['strictness_rate']:.1%} strictness. "
+                "The gate failed because agreement was below 85%; all seven disagreements were evaluator-too-strict.",
+                "",
+            ]
+        )
+    return "\n".join(lines)
 
 
 def generate_comparison_artifacts(
@@ -98,6 +119,7 @@ def generate_comparison_artifacts(
     json_output: Path,
     memo_output: Path,
     site_output: Path,
+    trust_artifact: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     case_ids = {case.case_id for case in cases}
     canonical: list[RunRecord] = []
@@ -169,6 +191,6 @@ def generate_comparison_artifacts(
     memo_output.parent.mkdir(parents=True, exist_ok=True)
     site_output.parent.mkdir(parents=True, exist_ok=True)
     json_output.write_text(rendered, encoding="utf-8")
-    memo_output.write_text(_memo(artifact, aliases), encoding="utf-8")
+    memo_output.write_text(_memo(artifact, aliases, trust_artifact), encoding="utf-8")
     site_output.write_text(json.dumps(site_artifact, indent=2) + "\n", encoding="utf-8")
     return artifact

@@ -32,16 +32,16 @@
       <div class="decision-head">
         <div>
           <p class="eyebrow">Current gate decision</p>
-          <h2 id="decision-title"><span class="status-dot" aria-hidden="true"></span>Insufficient evidence</h2>
+          <h2 id="decision-title"><span class="status-dot" aria-hidden="true"></span><span id="gate-decision">Fail</span></h2>
         </div>
         <p class="decision-version">Thresholds v1.0</p>
       </div>
-      <p class="decision-copy">No valid human calibration file exists, so the evaluator cannot pass. The project fails closed rather than converting missing evidence into confidence.</p>
+      <p class="decision-copy" id="gate-summary">The 30-case blind review is complete. The evaluator caught every human-identified failure but rejected seven responses the reviewer accepted, leaving agreement below the versioned threshold.</p>
       <div class="criteria" role="list" aria-label="Gate criteria">
-        <div role="listitem"><span>Agreement</span><strong>Pending</strong><small>Required >= 85%</small></div>
-        <div role="listitem" class="critical"><span>Failure recall</span><strong>Pending</strong><small>Required >= 90%</small></div>
-        <div role="listitem"><span>Leniency</span><strong>Pending</strong><small>Required <= 10%</small></div>
-        <div role="listitem"><span>Human evidence</span><strong>0 / 30</strong><small>5+ human failures required</small></div>
+        <div role="listitem" class="critical"><span>Agreement</span><strong id="gate-agreement">76.7%</strong><small>Required >= 85%</small></div>
+        <div role="listitem"><span>Failure recall</span><strong id="gate-recall">100.0%</strong><small>Required >= 90%</small></div>
+        <div role="listitem"><span>Leniency</span><strong id="gate-leniency">0.0%</strong><small>Required <= 10%</small></div>
+        <div role="listitem"><span>Human evidence</span><strong id="gate-coverage">30 / 30</strong><small id="gate-failures">5 human failures</small></div>
       </div>
     </section>
 
@@ -49,13 +49,13 @@
       <div class="section-intro">
         <p class="eyebrow">Evidence inventory</p>
         <h2 id="evidence-title">What is verified - and what is not.</h2>
-        <p>The dataset, validation machinery, and two-model Fireworks comparison are real. Human alignment remains intentionally unresolved until an independent blind review is returned.</p>
+        <p>The dataset, validation machinery, two-model Fireworks comparison, and fingerprint-validated blind review are real. The failed result is retained rather than tuned away.</p>
       </div>
       <div class="inventory">
         <article><p class="number">120</p><h3>Versioned cases</h3><p>80 broad Banking77 examples, 20 difficult answerable cases, and 20 authored ambiguity cases.</p><span class="verified">Verified offline</span></article>
         <article><p class="number">77</p><h3>Intent classes covered</h3><p>Every Banking77 intent appears in the standard slice; sourced examples come only from the upstream test split.</p><span class="verified">Verified offline</span></article>
-        <article><p class="number">35</p><h3>Offline tests passing</h3><p>SDK contract, schema, scoring, ambiguity, retry-complete cost caps, resume, provenance, comparison generation, blind review app, agreement, and every gate path.</p><span class="verified">Verified offline</span></article>
-        <article class="missing"><p class="number">0</p><h3>Human labels completed</h3><p>No calibration claim is available. This missing evidence is the decision, not a footnote.</p><span>Blocked</span></article>
+        <article><p class="number">36</p><h3>Offline tests passing</h3><p>SDK contract, schema, scoring, ambiguity, retry-complete cost caps, resume, provenance, report generation, blind review app, agreement, and every gate path.</p><span class="verified">Verified offline</span></article>
+        <article><p class="number">30</p><h3>Human labels completed</h3><p>One non-expert family reviewer completed a quick informal blind pass. All rows passed completeness and evidence-fingerprint validation.</p><span class="verified">Workflow pilot</span></article>
       </div>
     </section>
 
@@ -76,12 +76,12 @@
     </section>
 
     <section class="explorer" aria-labelledby="explorer-title">
-      <div class="section-intro"><p class="eyebrow">Evidence explorer</p><h2 id="explorer-title">Inspect traceable model decisions.</h2><p>These examples come from saved 120B records and deterministic checks. Human outcomes remain pending; no model-human disagreement is claimed.</p></div>
+      <div class="section-intro"><p class="eyebrow">Evidence explorer</p><h2 id="explorer-title">Inspect every model-human disagreement.</h2><p>All seven disagreements come from the fingerprint-validated 30-case packet and saved 120B records. In each one, the automated evaluator failed a response the reviewer passed.</p></div>
       <div class="filters" role="group" aria-label="Disagreement filters">
         <label>Model<select id="model-filter"><option value="all">All models</option><option value="live">GPT-OSS 120B</option></select></label>
         <label>Source type<select id="source-filter"><option value="all">All sources</option><option value="authored_ambiguous">Authored ambiguous</option><option value="banking77_difficult">Banking77 difficult</option></select></label>
         <label>Evaluator outcome<select id="eval-filter"><option value="all">All outcomes</option><option value="pass">Pass</option><option value="fail">Fail</option></select></label>
-        <label>Human outcome<select id="human-filter"><option value="all">All outcomes</option><option value="pending">Pending</option></select></label>
+        <label>Human outcome<select id="human-filter"><option value="all">All outcomes</option><option value="pass">Pass</option><option value="fail">Fail</option></select></label>
       </div>
       <div id="case-list" class="case-list" aria-live="polite"></div>
     </section>
@@ -103,7 +103,7 @@
     </section>
   </main>
 
-  <footer><p>Built by Ali Hasan from public Fireworks documentation, 240 saved model responses, and a reproducible Banking77-derived test set. Human review remains pending.</p><div><a href="methodology.html">Methodology and limitations</a><span aria-hidden="true">/</span><a href="https://github.com/AliHasan-786/fireworks-evaluator-trust-gate">Repository</a></div></footer>
+  <footer><p>Built by Ali Hasan from public Fireworks documentation, 240 saved model responses, a reproducible Banking77-derived test set, and 30 fingerprint-validated blind human labels.</p><div><a href="methodology.html">Methodology and limitations</a><span aria-hidden="true">/</span><a href="https://github.com/AliHasan-786/fireworks-evaluator-trust-gate">Repository</a></div></footer>
   <script src="app.js"></script>
 </body>
 </html>

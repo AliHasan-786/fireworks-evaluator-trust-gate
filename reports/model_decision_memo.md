@@ -1,6 +1,6 @@
 # Model decision memo
 
-Generated from saved run records at `2026-08-01T21:24:02.814310+00:00`.
+Generated from saved run records at `2026-08-03T16:35:00.655013+00:00`.
 
 ## Evidence
 
@@ -27,6 +27,8 @@ Generated from saved run records at `2026-08-01T21:24:02.814310+00:00`.
 
 Guardrails first, then latency for the default and quality for escalation; no weighted composite.
 
-## Human-evidence boundary
+## Human calibration
 
-This comparison measures model behavior against versioned ground truth. It does not establish evaluator-human alignment. The trust gate remains `INSUFFICIENT_EVIDENCE` until a completed, fingerprint-validated blind packet is returned by an independent reviewer.
+**Trust gate: FAIL**
+
+A fingerprint-validated 30-case blind review produced 76.7% agreement, 100.0% failure recall across 5 human failures, 0.0% leniency, and 28.0% strictness. The gate failed because agreement was below 85%; all seven disagreements were evaluator-too-strict.

@@ -20,6 +20,7 @@ from src.inference.model_catalog import (
     load_run_config,
 )
 from src.reporting.comparison import generate_comparison_artifacts
+from src.reporting.trust import generate_trust_artifacts
 from src.schemas import EvaluationCase
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,6 +61,8 @@ def live_output_path(spec: ModelSpec) -> Path:
 def write_comparison(config: ComparisonRunConfig) -> dict[str, Any]:
     cases = load_cases(ROOT / "data/processed/v1.0.0/evaluation_set.jsonl")
     manifest = json.loads((ROOT / "data/processed/v1.0.0/manifest.json").read_text())
+    trust_path = ROOT / "output/evaluator_trust_gate.json"
+    trust_artifact = json.loads(trust_path.read_text()) if trust_path.exists() else None
     return generate_comparison_artifacts(
         cases,
         {alias: live_output_path(spec) for alias, spec in config.ordered_models()},
@@ -68,6 +71,7 @@ def write_comparison(config: ComparisonRunConfig) -> dict[str, Any]:
         json_output=ROOT / "output/model_comparison.json",
         memo_output=ROOT / "reports/model_decision_memo.md",
         site_output=ROOT / "public_site/data/model_comparison.json",
+        trust_artifact=trust_artifact,
     )
 
 
@@ -84,6 +88,13 @@ def _add_parsers(subparsers: Any) -> None:
     gate.add_argument("--human-labels", default="artifacts/human_labeling/completed_labels.csv")
     gate.add_argument("--run-records", help="JSONL used to populate the completed blind packet")
     gate.add_argument("--output", help="Optional path for the machine-readable gate report")
+    report_trust = subparsers.add_parser("report-trust")
+    report_trust.add_argument(
+        "--human-labels", default="artifacts/human_labeling/completed_labels.csv"
+    )
+    report_trust.add_argument(
+        "--run-records", default="artifacts/live/gpt-oss-120b.jsonl"
+    )
     run = subparsers.add_parser("run-model")
     run.add_argument("--model-id", required=True)
     run.add_argument("--limit", type=int, default=5)
@@ -95,6 +106,7 @@ def _add_parsers(subparsers: Any) -> None:
     review = subparsers.add_parser("build-review-app")
     review.add_argument("--packet", default="artifacts/human_labeling/blind_packet.csv")
     review.add_argument("--output", default="artifacts/human_labeling/reviewer_app.html")
+    review.add_argument("--reviewer-id", default="reviewer-1")
 
 
 def _gate(args: Any) -> None:
@@ -132,6 +144,23 @@ def _gate(args: Any) -> None:
 def _require_key() -> None:
     if not os.getenv("FIREWORKS_API_KEY"):
         raise SystemExit("FIREWORKS_API_KEY is required")
+
+
+def _report_trust(args: Any) -> None:
+    cases = load_cases(ROOT / "data/processed/v1.0.0/evaluation_set.jsonl")
+    artifact = generate_trust_artifacts(
+        cases,
+        ROOT / args.human_labels,
+        ROOT / args.run_records,
+        load_config(ROOT / "config/trust_gate.v1.yaml"),
+        json_output=ROOT / "output/evaluator_trust_gate.json",
+        report_output=ROOT / "reports/evaluator_trust_report.md",
+        site_output=ROOT / "public_site/data/evaluator_trust.json",
+        readout_output=ROOT / "docs/design_partner_readout.md",
+    )
+    _raw_config, comparison_config = load_run_config(ROOT / "config/run.v1.yaml")
+    write_comparison(comparison_config)
+    print(json.dumps(artifact, indent=2))
 
 
 async def _run_configured_model(
@@ -286,6 +315,8 @@ def main() -> None:
         print(ROOT / args.output)
     elif args.command == "gate":
         _gate(args)
+    elif args.command == "report-trust":
+        _report_trust(args)
     elif args.command == "run-model":
         _run_model(args)
     elif args.command == "run-comparison":
@@ -294,7 +325,11 @@ def main() -> None:
         _raw_config, config = load_run_config(ROOT / "config/run.v1.yaml")
         print(json.dumps(write_comparison(config), indent=2))
     elif args.command == "build-review-app":
-        print(render_review_app(ROOT / args.packet, ROOT / args.output))
+        print(
+            render_review_app(
+                ROOT / args.packet, ROOT / args.output, reviewer_id=args.reviewer_id
+            )
+        )
 
 
 if __name__ == "__main__":
