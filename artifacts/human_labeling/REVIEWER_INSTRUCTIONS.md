@@ -18,6 +18,6 @@ Your job is simply to decide whether that response would get the customer to the
 3. Choose **Pass** when the decision makes sense. Choose **Needs work** when it does not.
 4. When you choose **Needs work**, select the plain-English reason shown on the page.
 5. Complete all 30 cases. The page saves progress automatically in that browser.
-6. Click **Download completed_labels.csv** and return that downloaded file to Ali.
+6. Click **Download completed_labels_reviewer-1.csv** and return that downloaded file to Ali.
 
 Use normal judgment; no programming or specialist banking knowledge is required. Do not inspect the project website, reports, expected answers, or automated scores while reviewing. Do not open or edit `blind_packet.csv` directly.

@@ -72,7 +72,8 @@ uv run python -m src.cli export-packet \
 uv run python -m src.cli build-review-app
 
 # The reviewer opens artifacts/human_labeling/reviewer_app.html,
-# completes 30 plain-language cards, and downloads completed_labels.csv.
+# completes 30 plain-language cards, and downloads completed_labels_reviewer-1.csv.
+# Save the validated reviewer file as completed_labels.csv for the canonical report workflow.
 
 uv run python -m src.cli gate \
   --human-labels artifacts/human_labeling/completed_labels.csv \
