@@ -10,7 +10,7 @@
 “Take ‘Why was I charged extra?’ The 120B model forced extra-charge-on-statement at 86% confidence. The deterministic evaluator rejected it because the payment channel is missing. That is the kind of plausible but unsafe answer the gate is designed to surface.”
 
 **0:52-1:08 - Decision**  
-“The model decision is no-deploy: 20B reached 74% intent accuracy and 60% ambiguity detection; 120B reached 79% and 55%. Neither meets the 90% ambiguity guardrail. The evaluator trust decision is also insufficient evidence because independent human labels are still missing.”
+“The model decision is no-deploy: 20B reached 74% intent accuracy and 60% ambiguity detection; 120B reached 79% and 55%. Neither meets the 90% ambiguity guardrail. The human-calibrated trust gate also failed: agreement was 23 of 30, below the 85% requirement. It caught all five reviewer-identified failures with no false passes, but seven disagreements showed the evaluator was too strict.”
 
 **1:08-1:30 - Product implication**  
-“The candidate product idea is an Evaluator Trust Report inside evaluator or RFT setup: blind calibration, missed-failure direction, uncertainty, versioned thresholds, and customer-side execution when labels cannot leave the environment. The next step is independent review of the generated 30-case blind packet—not another synthetic score.”
+“The candidate product idea is an Evaluator Trust Report inside evaluator or RFT setup: blind calibration, missed-failure direction, uncertainty, versioned thresholds, and customer-side execution when labels cannot leave the environment. The next step is a second blind reviewer and adjudication of the seven strictness disagreements before changing the policy or automating deployment.”
